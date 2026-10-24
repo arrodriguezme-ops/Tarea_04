@@ -1,0 +1,20 @@
+# Install PaddlePaddle first (pick CPU or GPU build from https://www.paddlepaddle.org.cn/install/quick), then the rest.
+# Versions below are the ones this project was written against; adjust the paddle build to your hardware.
+paddlepaddle==3.2.0
+paddleocr==3.2.0
+torch==2.8.0
+transformers==4.56.0
+datasets==4.0.0
+huggingface_hub==0.35.0
+sentence-transformers==5.1.0
+scikit-learn==1.7.2
+pandas==2.3.2
+numpy==2.2.6
+matplotlib==3.10.6
+seaborn==0.13.2
+jiwer==4.0.0
+streamlit==1.49.1
+pypdfium2==4.30.0
+pillow==11.3.0
+joblib==1.5.2
+tqdm==4.67.1
