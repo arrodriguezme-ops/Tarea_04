@@ -52,13 +52,18 @@ def sample_streaming(prefix, n, seed):
         yield r, img
 
 
-def sample_local(files, n, seed):
+def sample_local(files, n, seed, allow_photo=False):
     import pyarrow.parquet as pq
+
+    if not files:
+        print("  no local shards for this job, skipping")
+        return
 
     cols = ["id", "has_photo", "sex", "race", "exp_year", "image"]
     frames = [pq.read_table(f, columns=cols).to_pandas() for f in files]
     df = pd.concat(frames)
-    df = df[~df["has_photo"]]
+    if not allow_photo:
+        df = df[~df["has_photo"]]
     if len(df) < n:
         print(f"  only {len(df)} no-photo rows locally (< {n})")
     for _, r in df.sample(min(n, len(df)), random_state=seed).iterrows():
@@ -70,6 +75,11 @@ def main():
     ap.add_argument("--per-job", type=int, default=800)
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--local-dir", default=None, help="folder with <prefix>-NNNN.parquet shards")
+    ap.add_argument("--jobs", nargs="*", default=None, help="restrict to these job keys")
+    ap.add_argument("--allow-photo", action="store_true",
+                    help="DEV ONLY (local mode): also sample photo CVs. Violates the assignment rules; "
+                         "use just to test the pipeline, never for reported results.")
+    ap.add_argument("--no-reference", action="store_true", help="skip downloading the text config")
     args = ap.parse_args()
     set_seed(args.seed)
     IMAGES.mkdir(parents=True, exist_ok=True)
@@ -77,10 +87,12 @@ def main():
     prefixes = None if args.local_dir else resolve_prefixes()
     rows = []
     for job, kw in JOBS.items():
+        if args.jobs and job not in args.jobs:
+            continue
         print(f"== {job}")
         if args.local_dir:
             files = sorted(Path(args.local_dir).glob(f"*{kw}*.parquet"))
-            it = sample_local(files, args.per_job, args.seed)
+            it = sample_local(files, args.per_job, args.seed, args.allow_photo)
         else:
             it = sample_streaming(prefixes[job], args.per_job, args.seed)
         for r, img in it:
@@ -94,6 +106,8 @@ def main():
     print(meta.groupby("job").size())
     print(f"Share at/above cap: {(meta['exp_year'] >= 20).mean():.1%}")
 
+    if args.no_reference or args.local_dir and not meta.shape[0]:
+        return
     # Reference text: used ONLY to measure OCR error and the Question 2 "clean text" evaluation.
     from datasets import load_dataset
 
