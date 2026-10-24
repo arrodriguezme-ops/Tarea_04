@@ -1,0 +1,20 @@
+*.ss~
+*.ss#*
+.#*.ss
+
+*.scm~
+*.scm#*
+.#*.scm
+
+# Project artefacts (regenerate with the README steps)
+*.parquet
+data/raw/images/
+data/raw/*.csv
+data/ocr/*.json
+data/processed/*.csv
+models/baselines/*
+models/bert/*
+!**/.gitkeep
+__pycache__/
+.venv/
+.streamlit/secrets.toml
