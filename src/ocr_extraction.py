@@ -27,6 +27,7 @@ def get_ocr(rec_model="PP-OCRv5_server_rec", det_model="PP-OCRv5_server_det"):
             use_doc_orientation_classify=False,
             use_doc_unwarping=False,
             use_textline_orientation=False,
+            enable_mkldnn=False,  # oneDNN crashes on CPU with Paddle 3.x (ConvertPirAttribute2RuntimeAttribute)
         )
     return _OCR
 

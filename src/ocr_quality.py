@@ -27,6 +27,8 @@ def years_correct(ref, hyp):
 
 def main():
     meta = pd.read_csv(RAW / "metadata.csv", dtype={"id": str})
+    if not (RAW / "reference_text.csv").exists():
+        raise SystemExit("reference_text.csv missing: log in to Hugging Face and rerun download_data.py")
     ref = pd.read_csv(RAW / "reference_text.csv", dtype={"id": str}).set_index("id")["text"]
     rows = []
     for _, m in meta.iterrows():

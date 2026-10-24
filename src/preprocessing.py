@@ -147,7 +147,10 @@ def clean_reference(text):
 
 def main():
     meta = pd.read_csv(RAW / "metadata.csv", dtype={"id": str})
-    ref = pd.read_csv(RAW / "reference_text.csv", dtype={"id": str}).set_index("id")["text"].to_dict()
+    ref_f = RAW / "reference_text.csv"
+    ref = pd.read_csv(ref_f, dtype={"id": str}).set_index("id")["text"].to_dict() if ref_f.exists() else {}
+    if not ref:
+        print("WARNING: no reference text; text_ref is empty (OCR quality / Q2 gap not meaningful)")
     rows = []
     for _, m in meta.iterrows():
         f = OCR_DIR / f"{m['id']}.json"

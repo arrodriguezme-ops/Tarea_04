@@ -37,7 +37,7 @@ def encode_ids(tok, text, max_len, strategy):
 
 
 def make_batch(tok, windows):
-    feats = [tok.build_inputs_with_special_tokens(w) for w in windows]
+    feats = [[tok.cls_token_id] + list(w) + [tok.sep_token_id] for w in windows]
     L = max(len(f) for f in feats)
     ids = torch.tensor([f + [tok.pad_token_id] * (L - len(f)) for f in feats])
     return ids, (ids != tok.pad_token_id).long()
