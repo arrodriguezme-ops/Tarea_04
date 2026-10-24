@@ -91,7 +91,10 @@ def main():
             continue
         print(f"== {job}")
         if args.local_dir:
-            files = sorted(Path(args.local_dir).glob(f"*{kw}*.parquet"))
+            import pyarrow.parquet as pq
+
+            files = [f for f in sorted(Path(args.local_dir).glob(f"*{kw}*.parquet"))
+                     if "has_photo" in pq.ParquetFile(f).schema_arrow.names]  # image shards only
             it = sample_local(files, args.per_job, args.seed, args.allow_photo)
         else:
             it = sample_streaming(prefixes[job], args.per_job, args.seed)
@@ -106,16 +109,22 @@ def main():
     print(meta.groupby("job").size())
     print(f"Share at/above cap: {(meta['exp_year'] >= 20).mean():.1%}")
 
-    if args.no_reference or args.local_dir and not meta.shape[0]:
+    if args.no_reference:
         return
-    # Reference text: used ONLY to measure OCR error and the Question 2 "clean text" evaluation.
-    from datasets import load_dataset
+    # Reference text: used ONLY to measure OCR error and for the Question 2 "clean text" evaluation.
+    if args.local_dir:  # <job>.parquet files of the "text" config (id, job, ..., text)
+        import pyarrow.parquet as pq
 
-    txt = load_dataset("sumin-yu/PopResume", "text")
-    ref = pd.concat([pd.DataFrame(txt[s]) for s in txt])
+        ref = pd.concat([pq.read_table(f, columns=["id", "job", "text"]).to_pandas()
+                         for f in Path(args.local_dir).glob("*.parquet")
+                         if "has_photo" not in pq.ParquetFile(f).schema_arrow.names])
+    else:
+        from datasets import load_dataset
+
+        txt = load_dataset("sumin-yu/PopResume", "text")
+        ref = pd.concat([pd.DataFrame(txt[s]) for s in txt])
     ref["id"] = ref["id"].astype(str)
-    ref["job"] = ref["job"].astype(str) if "job" in ref else ""
-    ref["key"] = ref["job"] + "_" + ref["id"]
+    ref["key"] = ref["job"].astype(str) + "_" + ref["id"]
     ref = ref[ref["key"].isin(set(meta["id"]))][["key", "text"]].rename(columns={"key": "id"})
     ref.to_csv(RAW / "reference_text.csv", index=False)
     print(f"Reference text found for {len(ref)}/{len(meta)} CVs")

@@ -61,7 +61,11 @@ def main():
     args = ap.parse_args()
 
     OCR_DIR.mkdir(parents=True, exist_ok=True)
-    paths = sorted(IMAGES.glob("*.png"))[: args.limit]
+    import pandas as pd
+    from utils import RAW
+
+    ids = set(pd.read_csv(RAW / "metadata.csv", dtype={"id": str})["id"])  # only the current sample
+    paths = [p for p in sorted(IMAGES.glob("*.png")) if p.stem in ids][: args.limit]
     ocr = get_ocr(args.rec_model, args.det_model)
     failed = []
     for p in tqdm(paths):
@@ -78,7 +82,7 @@ def main():
         except Exception as e:  # noqa: BLE001
             failed.append({"id": p.stem, "error": str(e)})
 
-    docs = [load_json(f) for f in OCR_DIR.glob("*.json")]
+    docs = [load_json(OCR_DIR / f"{p.stem}.json") for p in paths if (OCR_DIR / f"{p.stem}.json").exists()]
     confs = [l["score"] for d in docs for l in d["lines"]]
     summary = {
         "n_cvs": len(docs),
