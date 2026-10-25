@@ -25,7 +25,7 @@ BAND_EDGES = [0, 3, 6, 11, CAP + 1]  # 0-2, 3-5, 6-10, 11-20
 BAND_LABELS = ["0-2", "3-5", "6-10", "11-20"]
 JOBS = {
     "registered_nurses": "nurse",
-    "teachers": "teacher",
+    "elementary_middle_school_teachers": "teacher",
     "software_developers": "software",
     "accountants_auditors": "account",
     "construction_laborers": "construction",

@@ -22,7 +22,7 @@ def table(name, **kw):
 
 def show(df, **kw):
     if df is not None:
-        st.dataframe(df, use_container_width=True, **kw)
+        st.dataframe(df, width="stretch", **kw)
 
 
 @st.cache_resource

@@ -61,7 +61,7 @@ def sample_local(files, n, seed, allow_photo=False):
 
     cols = ["id", "has_photo", "sex", "race", "exp_year", "image"]
     frames = [pq.read_table(f, columns=cols).to_pandas() for f in files]
-    df = pd.concat(frames)
+    df = pd.concat(frames).drop_duplicates(subset="id")  # tolerate duplicated downloads
     if not allow_photo:
         df = df[~df["has_photo"]]
     if len(df) < n:
